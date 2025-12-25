@@ -1,0 +1,122 @@
+{
+  "EmitOffset": {
+    "X": {
+      "Max": 0.2
+    },
+    "Y": {
+      "Min": 0,
+      "Max": 0.2
+    },
+    "Z": {
+      "Min": 0,
+      "Max": 0.2
+    }
+  },
+  "ParticleRotationInfluence": "Billboard",
+  "LightInfluence": 0.8,
+  "MaxConcurrentParticles": 2,
+  "ParticleLifeSpan": {
+    "Min": 1.0,
+    "Max": 1.0
+  },
+  "SpawnRate": {
+    "Min": 5,
+    "Max": 10
+  },
+  "ParticleRotateWithSpawner": true,
+  "Attractors": [
+    {
+      "Position": {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      "LinearAcceleration": {
+        "X": 0,
+        "Y": 1,
+        "Z": 0
+      },
+      "Radius": 1,
+      "DampingMultiplier": {
+        "X": 0,
+        "Y": 0.9,
+        "Z": 0
+      }
+    }
+  ],
+  "Particle": {
+    "Texture": "Particles/Textures/Shapes/Alerted_HiRes.png",
+    "FrameSize": {
+      "Width": 64,
+      "Height": 64
+    },
+    "ScaleRatioConstraint": "OneToOne",
+    "UVOption": "None",
+    "Animation": {
+      "0": {
+        "FrameIndex": {
+          "Min": 0,
+          "Max": 0
+        },
+        "Opacity": 1,
+        "Scale": {
+          "X": {
+            "Min": 1,
+            "Max": 1
+          }
+        },
+        "Color": "#2c9bff",
+        "Rotation": {
+          "Z": {
+            "Min": 0,
+            "Max": 0
+          }
+        }
+      },
+      "10": {
+        "Scale": {
+          "X": {
+            "Min": 3,
+            "Max": 5
+          }
+        },
+        "Color": "#2c9bff"
+      },
+      "100": {
+        "Opacity": 1,
+        "Scale": {
+          "X": {
+            "Min": 1,
+            "Max": 1
+          }
+        },
+        "Color": "#2c9bff"
+      }
+    },
+    "InitialAnimationFrame": {
+      "Rotation": {
+        "Z": {
+          "Min": -10,
+          "Max": 10
+        }
+      },
+      "Scale": {
+        "X": {
+          "Min": 0.05,
+          "Max": 0.05
+        }
+      },
+      "Opacity": 1,
+      "Color": "#ff2c2c",
+      "FrameIndex": {
+        "Min": 0,
+        "Max": 0
+      }
+    }
+  },
+  "RenderMode": "BlendAdd",
+  "SpawnBurst": false,
+  "TrailSpawnerRotationMultiplier": 1.0,
+  "LinearFiltering": true,
+  "TrailSpawnerPositionMultiplier": 1.0
+}

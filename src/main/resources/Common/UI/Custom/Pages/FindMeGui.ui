@@ -1,0 +1,44 @@
+$C = "../Common.ui";
+
+$C.@PageOverlay {
+  Anchor: (Top: 40);
+
+  $C.@Container {
+    Anchor: (Width: 1050, Height: 700);
+
+    #Title {
+      Group {
+        $C.@Title {
+          @Text = "Search For item...";
+        }
+
+        $C.@HeaderSearch {}
+      }
+    }
+
+    #Content {
+      LayoutMode: Left;
+
+      Group #CommandInfo {
+        FlexWeight: 1;
+        LayoutMode: TopScrolling;
+        Padding: (Left: 2);
+        ScrollbarStyle: $C.@DefaultScrollbarStyle;
+
+        Group #SubcommandSection {
+          Anchor: (Bottom: 2);
+          LayoutMode: Top;
+          Visible: false;
+
+          Group #SubcommandCards {
+            LayoutMode: Top;
+          }
+        }
+
+
+      }
+    }
+  }
+}
+
+$C.@BackButton {}

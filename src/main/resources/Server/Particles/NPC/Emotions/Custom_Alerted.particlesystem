@@ -1,0 +1,13 @@
+{
+  "Spawners": [
+    {
+      "SpawnerId": "Custom_Alerted",
+      "PositionOffset": {
+        "X": 0,
+        "Y": 0.4,
+        "Z": -0.1
+      }
+    }
+  ],
+  "LifeSpan": 5.0
+}

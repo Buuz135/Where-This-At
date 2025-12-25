@@ -1,0 +1,110 @@
+{
+  "TranslationProperties": {
+    "Name": "where-this-at-items.Inventory_Lectern.name",
+    "Description": "where-this-at-items.Inventory_Lectern.desc"
+  },
+  "ItemLevel": 10,
+  "Icon": "Icons/ItemsGenerated/Soil_Grass.png",
+  "Categories": [
+    "Furniture.Containers"
+  ],
+  "PlayerAnimationsId": "Block",
+  "Set": "",
+  "BlockType": {
+    "Material": "Solid",
+    "DrawType": "Cube",
+    "Group": "",
+    "Flags": {
+      "IsUsable": true
+    },
+    "Gathering": {
+      "Breaking": {
+        "GatherType": "Woods"
+      }
+    },
+    "BlockParticleSetId": "Wood",
+    "Textures": [
+      {
+        "Down": "BlockTextures/Soil_Dirt.png",
+        "Sides": "BlockTextures/Soil_Grass_Side.png",
+        "Up": "BlockTextures/Soil_Grass_GS.png",
+        "Weight": 1
+      },
+      {
+        "Down": "BlockTextures/Soil_Dirt.png",
+        "Sides": "BlockTextures/Soil_Grass_Side.png",
+        "Up": "BlockTextures/Soil_Grass_GS_02.png",
+        "Weight": 1
+      }
+    ],
+    "BlockSoundSetId": "Wood",
+    "BiomeTintUp": 0,
+    "TextureSideMask": "BlockTextures/Soil_grass_Side_Mask_GS.png",
+    "TransitionTexture": "BlockTextures/Transition_Soil_Grass_GS.png",
+    "TransitionToGroups": [
+      "Stone",
+      "Dirt",
+      "Dirt_Dark",
+      "Sand",
+      "Sand_White",
+      "Gravel",
+      "Wood"
+    ],
+    "ParticleColor": "#63412c",
+    "TransitionToTag": "Fluid=Water",
+    "Interactions": {
+      "Use": "Open_Lectern",
+      "Primary": "Break_Container"
+    },
+    "VariantRotation": "NESW",
+    "Support": {
+      "Down": [
+        {
+          "FaceType": "Full"
+        }
+      ]
+    },
+    "State": {
+      "Id": "StateData"
+    }
+  },
+  "Tags": {
+    "Type": [
+      "Soil"
+    ]
+  },
+  "IconProperties": {
+    "Scale": 0.3,
+    "Rotation": [
+      339.295,
+      229.107,
+      337.792
+    ],
+    "Translation": [
+      0,
+      -6
+    ]
+  },
+  "ItemSoundSetId": "ISS_Blocks_Wood",
+  "Recipe": {
+    "Input": [
+      {
+        "ResourceTypeId": "Wood_Trunk",
+        "Quantity": 4
+      },
+      {
+        "ItemId": "Ingredient_Bar_Iron",
+        "Quantity": 2
+      }
+    ],
+    "BenchRequirement": [
+      {
+        "Type": "Crafting",
+        "Id": "Workbench",
+        "Categories": [
+          "Workbench_Tinkering"
+        ]
+      }
+    ]
+  }
+}

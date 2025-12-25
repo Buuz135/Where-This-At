@@ -1,0 +1,18 @@
+{
+  "Group": "Buuz135",
+  "Name": "WhereThisAt",
+  "Version": "1.0.0",
+  "Description": "Find items nearby with a simple search bar.",
+  "Authors": [
+    {
+      "Name": "Buuz135"
+    }
+  ],
+  "Website": "website",
+  "ServerVersion": "*",
+  "Dependencies": {},
+  "OptionalDependencies": {},
+  "DisabledByDefault": false,
+  "Main": "com.buuz135.wherethisat.Main",
+  "IncludesAssetPack": true
+}

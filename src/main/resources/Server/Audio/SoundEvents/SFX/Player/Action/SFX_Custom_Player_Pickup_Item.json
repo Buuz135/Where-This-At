@@ -1,0 +1,17 @@
+{
+  "Layers": [
+    {
+      "Files": [
+        "Sounds/PlayerActions/Pickup/Player_Item_Pickup_01.ogg"
+      ],
+      "RandomSettings": {
+        "MinPitch": -1,
+        "MaxPitch": 1
+      }
+    }
+  ],
+  "PreventSoundInterruption": false,
+  "MaxInstance": 1,
+  "Volume": 5,
+  "Parent": "SFX_Attn_Moderate"
+}

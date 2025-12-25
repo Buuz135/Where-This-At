@@ -1,0 +1,73 @@
+$C = "../Common.ui";
+
+@CustomButtonStyle = LabelStyle(
+  FontSize: 12,
+  TextColor: #bfcdd5,
+  RenderBold: true,
+  RenderUppercase: true,
+  HorizontalAlignment: Center,
+  VerticalAlignment: Center
+);
+
+@CusSecondaryTextButtonStyle = TextButtonStyle(
+  Default: (Background: PatchStyle(TexturePath: "../Common/Buttons/Secondary.png", Border: $C.@ButtonBorder), LabelStyle: @CustomButtonStyle),
+  Hovered: (Background: PatchStyle(TexturePath: "../Common/Buttons/Secondary_Hovered.png", Border: $C.@ButtonBorder), LabelStyle: @CustomButtonStyle),
+  Pressed: (Background: PatchStyle(TexturePath: "../Common/Buttons/Secondary_Pressed.png", Border: $C.@ButtonBorder), LabelStyle: @CustomButtonStyle),
+  Disabled: (Background: PatchStyle(TexturePath: "../Common/Buttons/Disabled.png", Border: $C.@ButtonBorder), LabelStyle: @CustomButtonStyle)
+);
+
+Group {
+  Anchor: (Width: 120, Bottom: 6, Right: 6);
+  Padding: 2;
+  Background: (Color: #1a1a1a(0.6));
+  LayoutMode: Top;
+
+  Group {
+    ItemIcon #ItemIcon {
+      Anchor: (Width: 72, Height: 72, Bottom: 5);
+      Visible: true;
+    }
+    Label #ItemAmount {
+      Anchor: (Left: 74, Top: 54);
+      Background: (Color: #1a1a1a(0.6));
+      Padding: 2;
+      Style: (
+        FontSize: 12,
+        RenderBold: true,
+        TextColor: #ffffff,
+        
+      );
+      
+    }
+  }
+
+  
+
+  Group #ButtonGroup {
+    LayoutMode: Left;
+    Padding: (Top: 5, Bottom: 5, Left: 5, Right: 5);
+
+    $C.@SecondaryTextButton #GetButton {
+      Text: "Get";
+      Anchor: (Width: 50, Height: 30);
+      Padding: (Left: 1, Right: 1, Top: 1, Bottom: 1);
+
+      Style: @CusSecondaryTextButtonStyle;
+      TooltipText: "";
+    }
+    
+    Label {
+      FlexWeight: 1;
+    }
+
+    $C.@SecondaryTextButton #FindButton {
+      Text: "Find";
+      Anchor: (Width: 50, Height: 30);
+      Padding: (Left: 1, Right: 1, Top: 1, Bottom: 1);
+
+      Style: @CusSecondaryTextButtonStyle;
+      TooltipText: "Find this item in nearby inventories";
+    }
+  }
+  
+}
