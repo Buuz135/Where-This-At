@@ -3,8 +3,8 @@
     "Name": "where-this-at-items.Inventory_Lectern.name",
     "Description": "where-this-at-items.Inventory_Lectern.desc"
   },
-  "ItemLevel": 10,
-  "Icon": "Icons/ItemsGenerated/Soil_Grass.png",
+  "ItemLevel": 0,
+  "Icon": "Icons/ItemsGenerated/Lectern_Icon.png",
   "Categories": [
     "Furniture.Containers"
   ],
@@ -12,7 +12,7 @@
   "Set": "",
   "BlockType": {
     "Material": "Solid",
-    "DrawType": "Cube",
+    "DrawType": "Model",
     "Group": "",
     "Flags": {
       "IsUsable": true
@@ -23,35 +23,10 @@
       }
     },
     "BlockParticleSetId": "Wood",
-    "Textures": [
-      {
-        "Down": "BlockTextures/Soil_Dirt.png",
-        "Sides": "BlockTextures/Soil_Grass_Side.png",
-        "Up": "BlockTextures/Soil_Grass_GS.png",
-        "Weight": 1
-      },
-      {
-        "Down": "BlockTextures/Soil_Dirt.png",
-        "Sides": "BlockTextures/Soil_Grass_Side.png",
-        "Up": "BlockTextures/Soil_Grass_GS_02.png",
-        "Weight": 1
-      }
-    ],
     "BlockSoundSetId": "Wood",
     "BiomeTintUp": 0,
-    "TextureSideMask": "BlockTextures/Soil_grass_Side_Mask_GS.png",
-    "TransitionTexture": "BlockTextures/Transition_Soil_Grass_GS.png",
-    "TransitionToGroups": [
-      "Stone",
-      "Dirt",
-      "Dirt_Dark",
-      "Sand",
-      "Sand_White",
-      "Gravel",
-      "Wood"
-    ],
     "ParticleColor": "#63412c",
-    "TransitionToTag": "Fluid=Water",
+    "TransitionToTag": "",
     "Interactions": {
       "Use": "Open_Lectern",
       "Primary": "Break_Container"
@@ -66,12 +41,18 @@
     },
     "State": {
       "Id": "StateData"
-    }
-  },
-  "Tags": {
-    "Type": [
-      "Soil"
-    ]
+    },
+    "CustomModel": "Blocks/lectern.blockymodel",
+    "Opacity": "Transparent",
+    "CustomModelTexture": [
+      {
+        "Texture": "Blocks/lectern.png"
+      }
+    ],
+    "CustomModelScale": 1,
+    "RequiresAlphaBlending": false,
+    "FlipType": "Symmetric",
+    "RotationYawPlacementOffset": "OneEighty"
   },
   "IconProperties": {
     "Scale": 0.3,
@@ -106,5 +87,6 @@
         ]
       }
     ]
-  }
+  },
+  "MaxStack": 100
 }

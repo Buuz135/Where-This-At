@@ -1,7 +1,0 @@
-{
-  "DefaultPartyClaimsAmount": 25,
-  "DefaultPartyBlockPlaceEnabled": false,
-  "DefaultPartyBlockBreakEnabled": false,
-  "DefaultPartyBlockInteractEnabled": false,
-  "ForceSimpleClaimsChunkWorldMap": true
-}

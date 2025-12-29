@@ -2,10 +2,13 @@
   "Group": "Buuz135",
   "Name": "WhereThisAt",
   "Version": "1.0.0",
-  "Description": "Find items nearby with a simple search bar.",
+  "Description": "Find items nearby using a Lectern with a simple search bar.",
   "Authors": [
     {
       "Name": "Buuz135"
+    },
+    {
+      "Name": "Shy"
     }
   ],
   "Website": "website",
