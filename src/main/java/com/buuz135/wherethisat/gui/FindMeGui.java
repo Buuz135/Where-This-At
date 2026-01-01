@@ -52,7 +52,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
 
     @Override
     public void build(@Nonnull Ref<EntityStore> ref, @Nonnull UICommandBuilder uiCommandBuilder, @Nonnull UIEventBuilder uiEventBuilder, @Nonnull Store<EntityStore> store) {
-        uiCommandBuilder.append("Pages/FindMeGui.ui");
+        uiCommandBuilder.append("Pages/Buuz135_WhereThisAt_FindGui.ui");
         uiCommandBuilder.set("#SearchInput.Value", this.searchQuery);
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#SearchInput", EventData.of("@SearchQuery", "#SearchInput.Value"), false);
         this.buildList(ref, uiCommandBuilder, uiEventBuilder, store);
@@ -152,7 +152,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                 commandBuilder.appendInline("#SubcommandCards", "Group { LayoutMode: Left; Anchor: (Bottom: 0); }");
             }
 
-            commandBuilder.append("#SubcommandCards[" + rowIndex + "]", "Pages/FindMeSearchItemIcon.ui");
+            commandBuilder.append("#SubcommandCards[" + rowIndex + "]", "Pages/Buuz135_WhereThisAt_FindSearchItemIcon.ui");
 
             /*commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "].TooltipText", Message.join(
                     Message.translation(item.getTranslationKey()),
@@ -202,10 +202,10 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                                 var centered = blocktype.getCenteredBlockPosition();
                                 var boudingBox = Main.BOUNDING_BOXES.get(blocktype.getBlockType().getHitboxType());
                                 var rotatedBoundingBox = boudingBox.get(blocktype.getRotationIndex()).getBoundingBox();
-                                ParticleUtil.spawnParticleEffect( "Custom_Alerted", new Vector3d(centered.getX() - rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
-                                ParticleUtil.spawnParticleEffect( "Custom_Alerted", new Vector3d(centered.getX() + rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
-                                ParticleUtil.spawnParticleEffect( "Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() - rotatedBoundingBox.depth() / 2D), store);
-                                ParticleUtil.spawnParticleEffect( "Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() + rotatedBoundingBox.depth() / 2D), store);
+                                ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX() - rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
+                                ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX() + rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
+                                ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() - rotatedBoundingBox.depth() / 2D), store);
+                                ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() + rotatedBoundingBox.depth() / 2D), store);
                             }
                         }
                     }
@@ -242,7 +242,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                                         amount -= transaction.getQuery().getQuantity();
                                         if (!playedSound) {
                                             playedSound = true;
-                                            var indext = SoundEvent.getAssetMap().getIndex("SFX_Custom_Player_Pickup_Item");
+                                            var indext = SoundEvent.getAssetMap().getIndex("Buuz135_WhereThisAt_SFX_Custom_Player_Pickup_Item");
                                             SoundUtil.playSoundEvent2dToPlayer(store.getComponent(ref, PlayerRef.getComponentType()), indext, SoundCategory.UI);
                                         }
                                         if (amount <= 0) return;

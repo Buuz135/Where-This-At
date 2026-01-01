@@ -4,7 +4,7 @@
     "Description": "where-this-at-items.Inventory_Lectern.desc"
   },
   "ItemLevel": 0,
-  "Icon": "Icons/ItemsGenerated/Lectern_Icon.png",
+  "Icon": "Icons/ItemsGenerated/Buuz135_WhereThisAt_Lectern_Icon.png",
   "Categories": [
     "Furniture.Containers"
   ],
@@ -28,7 +28,7 @@
     "ParticleColor": "#63412c",
     "TransitionToTag": "",
     "Interactions": {
-      "Use": "Open_Lectern",
+      "Use": "Buuz135_WhereThisAt_Open_Lectern",
       "Primary": "Break_Container"
     },
     "VariantRotation": "NESW",
@@ -42,11 +42,11 @@
     "State": {
       "Id": "StateData"
     },
-    "CustomModel": "Blocks/lectern.blockymodel",
+    "CustomModel": "Blocks/Buuz135_WhereThisAt_Lectern.blockymodel",
     "Opacity": "Transparent",
     "CustomModelTexture": [
       {
-        "Texture": "Blocks/lectern.png"
+        "Texture": "Blocks/Buuz135_WhereThisAt_Lectern.png"
       }
     ],
     "CustomModelScale": 1,

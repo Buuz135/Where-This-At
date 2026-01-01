@@ -33,7 +33,7 @@ public class Main extends JavaPlugin {
         super.setup();
         this.getEventRegistry().register(LoadedAssetsEvent.class, Item.class, Main::onItemAssetLoad);
         this.getEventRegistry().register(LoadedAssetsEvent.class, BlockBoundingBoxes.class, Main::onBoundingAssetLoad);
-        this.getCodecRegistry(Interaction.CODEC).register("LecternInteraction", LecternInteraction.class, LecternInteraction.CODEC);
+        this.getCodecRegistry(Interaction.CODEC).register("Buuz135_WhereThisAt_LecternInteraction", LecternInteraction.class, LecternInteraction.CODEC);
 
     }
 
@@ -44,7 +44,5 @@ public class Main extends JavaPlugin {
     private static void onBoundingAssetLoad(LoadedAssetsEvent<String, BlockBoundingBoxes, DefaultAssetMap<String, BlockBoundingBoxes>> event) {
         BOUNDING_BOXES = event.getAssetMap().getAssetMap();
     }
-
-
-
+    
 }

@@ -1,8 +1,8 @@
 {
   "Group": "Buuz135",
   "Name": "WhereThisAt",
-  "Version": "1.0.0",
-  "Description": "Find items nearby using a Lectern with a simple search bar.",
+  "Version": "1.0.1",
+  "Description": "Find items nearby chests using a Lectern with a simple search bar.",
   "Authors": [
     {
       "Name": "Buuz135"
@@ -13,7 +13,9 @@
   ],
   "Website": "website",
   "ServerVersion": "*",
-  "Dependencies": {},
+  "Dependencies": {
+    "Hytale:EntityModule": "*"
+  },
   "OptionalDependencies": {},
   "DisabledByDefault": false,
   "Main": "com.buuz135.wherethisat.Main",
