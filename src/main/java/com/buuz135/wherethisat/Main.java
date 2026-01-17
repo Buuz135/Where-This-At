@@ -31,6 +31,7 @@ public class Main extends JavaPlugin {
     @Override
     protected void setup() {
         super.setup();
+        CONFIG.save();
         this.getEventRegistry().register(LoadedAssetsEvent.class, Item.class, Main::onItemAssetLoad);
         this.getEventRegistry().register(LoadedAssetsEvent.class, BlockBoundingBoxes.class, Main::onBoundingAssetLoad);
         this.getCodecRegistry(Interaction.CODEC).register("Buuz135_WhereThisAt_LecternInteraction", LecternInteraction.class, LecternInteraction.CODEC);
