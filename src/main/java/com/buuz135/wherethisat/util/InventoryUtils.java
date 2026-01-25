@@ -56,6 +56,7 @@ public class InventoryUtils {
 
 
     public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z){
+        if (!ref.getStore().isInThread()) return false;
         var player = ref.getStore().getComponent(ref, Player.getComponentType());
         var playerRef = ref.getStore().getComponent(ref, PlayerRef.getComponentType());
         var interactionManager = new InteractionManager(player, playerRef, new InteractionSimulationHandler());
