@@ -1,40 +1,153 @@
 $C = "../Common.ui";
 
+@MaterialSlotSize = 64;
+
+@CustomButtonStyle = LabelStyle(
+  FontSize: 12,
+  TextColor: #bfcdd5,
+  RenderBold: true,
+  RenderUppercase: true,
+  HorizontalAlignment: Center,
+  VerticalAlignment: Center
+);
+
+@CusSecondaryTextButtonStyle = TextButtonStyle(
+  Default: (Background: PatchStyle(TexturePath: "../Common/Buttons/Secondary.png", Border: $C.@ButtonBorder), LabelStyle: @CustomButtonStyle),
+  Hovered: (Background: PatchStyle(TexturePath: "../Common/Buttons/Secondary_Hovered.png", Border: $C.@ButtonBorder), LabelStyle: @CustomButtonStyle),
+  Pressed: (Background: PatchStyle(TexturePath: "../Common/Buttons/Secondary_Pressed.png", Border: $C.@ButtonBorder), LabelStyle: @CustomButtonStyle),
+  Disabled: (Background: PatchStyle(TexturePath: "../Common/Buttons/Disabled.png", Border: $C.@ButtonBorder), LabelStyle: @CustomButtonStyle)
+);
+
 $C.@PageOverlay {
 
-  $C.@Container {
-    Anchor: (Width: 1050, Height: 700);
-
-    #Title {
-      Group {
-        $C.@Title {
-          @Text = "Search For item...";
-        }
-
-        $C.@HeaderSearch {}
-      }
-    }
-
-    #Content {
+  Group {
+    LayoutMode: Middle;
+    Group {
       LayoutMode: Left;
-
-      Group #CommandInfo {
+      Group {
         FlexWeight: 1;
-        LayoutMode: TopScrolling;
-        Padding: (Left: 2);
-        ScrollbarStyle: $C.@DefaultScrollbarStyle;
+      }
+      $C.@Container {
+        Anchor: (Width: 640, Height: 410);
+        FlexWeight: 1;
 
-        Group #SubcommandSection {
-          Anchor: (Bottom: 2);
-          LayoutMode: Top;
-          Visible: false;
+        #Title {
+          Group {
+            $C.@Title {
+              @Text = "Search For item...";
+            }
 
-          Group #SubcommandCards {
-            LayoutMode: Top;
+            $C.@HeaderSearch {}
           }
         }
 
+        #Content {
+          LayoutMode: Left;
 
+          Group #CommandInfo {
+            FlexWeight: 1;
+            LayoutMode: TopScrolling;
+            Padding: (Left: 2);
+            ScrollbarStyle: $C.@DefaultScrollbarStyle;
+
+            Group #SubcommandSection {
+              Anchor: (Bottom: 2);
+              LayoutMode: Top;
+              Visible: false;
+
+              Group #SubcommandCards {
+                LayoutMode: Top;
+              }
+            }
+          }
+        }
+      }
+      $C.@DecoratedContainer {
+        Anchor: (Width: 380, Height: 200);
+        FlexWeight: 1;
+
+        #Title {
+          Group {
+            $C.@Title {
+              @Text = "Settings";
+            }
+
+          }
+        }
+
+        #Content {
+          LayoutMode: Top;
+          $C.@CheckBoxWithLabel #DepositOnlyIfChestContainsSetting {
+            @Text = "Deposit Only If Chest Contains Item";
+            Padding: (Bottom: 4);
+          }
+          $C.@CheckBoxWithLabel #LeaveOneSetting {
+            @Text = "Leave One Item In the Slot When Extracting";
+            Padding: (Bottom: 4);
+          }
+          $C.@CheckBoxWithLabel #FindModeSetting {
+            @Text = "Find Mode";
+            Padding: (Bottom: 4);
+          }
+        }
+      }
+    }
+    Group{
+      LayoutMode: Left;
+      Group {
+        FlexWeight: 1;
+      }
+
+      $C.@Container {
+        Anchor: (Width: 640, Height: 410, Top: -6);
+
+        #Title {
+          Group {
+            $C.@Title {
+              @Text = "Inventory";
+            }
+
+            $C.@SecondaryTextButton #CleanHotbarButton {
+              Text: "CLEAN HOTBAR";
+              Anchor: (Width: 110, Height: 22, Right: 115);
+              Padding: (Left: 1, Right: 1, Top: 2, Bottom: 1);
+              Style: @CusSecondaryTextButtonStyle;
+              TooltipText: "Deposits all of the items from your hotbar to chests that contain the item.";
+            }
+
+            $C.@SecondaryTextButton #CleanInvButton {
+              Text: "CLEAN INV";
+              Anchor: (Width: 100, Height: 22, Right: 10);
+              Padding: (Left: 1, Right: 1, Top: 2, Bottom: 1);
+              Style: @CusSecondaryTextButtonStyle;
+              TooltipText: "Deposits all of the items from your inventory to chests that contain the item.";
+            }
+          }
+        }
+
+        #Content {
+          LayoutMode: Left;
+
+          Group #InventoryCommandInfo {
+            FlexWeight: 1;
+            LayoutMode: TopScrolling;
+            Padding: (Left: 8);
+            ScrollbarStyle: $C.@DefaultScrollbarStyle;
+
+            Group #InventorySubcommandSection {
+              Anchor: (Bottom: 2);
+              LayoutMode: Top;
+              Visible: false;
+
+              Group #InventorySubcommandCards {
+                LayoutMode: Top;
+              }
+            }
+          }
+        }
+      }
+      Group {
+        FlexWeight: 1;
       }
     }
   }

@@ -52,7 +52,14 @@
     "CustomModelScale": 1,
     "RequiresAlphaBlending": false,
     "FlipType": "Symmetric",
-    "RotationYawPlacementOffset": "OneEighty"
+    "RotationYawPlacementOffset": "OneEighty",
+    "BlockEntity": {
+      "Components": {
+        "Buuz135_WhereThisAt_LecternComponent": {
+          "DepositOnlyIfChestContains": true
+        }
+      }
+    }
   },
   "IconProperties": {
     "Scale": 0.3,

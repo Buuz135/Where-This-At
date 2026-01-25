@@ -1,6 +1,7 @@
 package com.buuz135.wherethisat.gui;
 
 import com.buuz135.wherethisat.Main;
+import com.buuz135.wherethisat.component.LecternDataComponent;
 import com.buuz135.wherethisat.util.InventoryUtils;
 import com.buuz135.wherethisat.util.MessageHelper;
 import com.buuz135.wherethisat.util.NumberUtils;
@@ -8,6 +9,7 @@ import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.ComponentAccessor;
+import com.hypixel.hytale.component.Holder;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
@@ -20,6 +22,7 @@ import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.server.core.command.system.MatchResult;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
+import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.i18n.I18nModule;
@@ -31,6 +34,7 @@ import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
 import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.meta.state.ItemContainerState;
+import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
@@ -43,33 +47,63 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     private String searchQuery = "";
     private HashMap<String, Integer> nearbyItems;
     private final Map<String, Item> visibleItems = new LinkedHashMap<>();
+    private final Holder<ChunkStore> blockEntity;
 
-    public FindMeGui(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime, String defaultSearchQuery, HashMap<String, Integer> nearbyItems) {
+
+    public FindMeGui(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime, String defaultSearchQuery, HashMap<String, Integer> nearbyItems, Holder<ChunkStore> blockEntity) {
         super(playerRef, lifetime, SearchGuiData.CODEC);
         this.searchQuery = defaultSearchQuery;
         this.nearbyItems = nearbyItems;
+        this.blockEntity = blockEntity;
     }
 
     @Override
     public void build(@Nonnull Ref<EntityStore> ref, @Nonnull UICommandBuilder uiCommandBuilder, @Nonnull UIEventBuilder uiEventBuilder, @Nonnull Store<EntityStore> store) {
+        LecternDataComponent component = blockEntity.getComponent(Main.LECTERN_COMPONENT);
         uiCommandBuilder.append("Pages/Buuz135_WhereThisAt_FindGui.ui");
         uiCommandBuilder.set("#SearchInput.Value", this.searchQuery);
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#SearchInput", EventData.of("@SearchQuery", "#SearchInput.Value"), false);
+        uiCommandBuilder.set("#DepositOnlyIfChestContainsSetting #CheckBox.Value", component.isDepositOnlyIfChestContains());
+        uiCommandBuilder.set("#FindModeSetting #CheckBox.Value", component.isFindMode());
+        uiCommandBuilder.set("#LeaveOneSetting #CheckBox.Value", component.isLeaveOneItemPerSlotWhenExtracting());
+        uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#DepositOnlyIfChestContainsSetting #CheckBox", EventData.of("Checkbox", "Deposit"), false);
+        uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#FindModeSetting #CheckBox", EventData.of("Checkbox", "FindMode"), false);
+        uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#LeaveOneSetting #CheckBox", EventData.of("Checkbox", "LeaveOne"), false);
+        uiEventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#CleanInvButton", EventData.of("Checkbox", "CleanInv"), false);
+        uiEventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#CleanHotbarButton", EventData.of("Checkbox", "CleanHotbar"), false);
         this.buildList(ref, uiCommandBuilder, uiEventBuilder, store);
     }
 
     @Override
     public void handleDataEvent(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nonnull SearchGuiData data) {
         super.handleDataEvent(ref, store, data);
-        if (data.findItem != null) {
-            notifyNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), data.findItem);
-            this.close();
-        }
+
         if (data.getItem != null) {
             var split = data.getItem.split(":");
             var item = split[0];
             var amount = Integer.parseInt(split[1]);
-            extractItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), item, amount);
+            LecternDataComponent component = blockEntity.getComponent(Main.LECTERN_COMPONENT);
+            if (component.isFindMode()) {
+                notifyNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), item);
+                this.close();
+                return;
+            }
+
+            extractItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), item, amount, component.isLeaveOneItemPerSlotWhenExtracting());
+            this.nearbyItems = InventoryUtils.collectNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange());
+            UICommandBuilder commandBuilder = new UICommandBuilder();
+            UIEventBuilder eventBuilder = new UIEventBuilder();
+            this.buildList(ref, commandBuilder, eventBuilder, store);
+            this.sendUpdate(commandBuilder, eventBuilder, false);
+        }
+        if (data.depositItem != null) {
+            var player = store.getComponent(ref, Player.getComponentType());
+            var split = data.depositItem.split(":");
+            var inventory = split[0];
+            var slot = Integer.parseInt(split[1]);
+            var amount = Integer.parseInt(split[2]);
+            LecternDataComponent component = blockEntity.getComponent(Main.LECTERN_COMPONENT);
+            depositItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), inventory.equals("Storage") ? player.getInventory().getStorage() : player.getInventory().getHotbar(), slot, amount, component.isDepositOnlyIfChestContains());
             this.nearbyItems = InventoryUtils.collectNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange());
             UICommandBuilder commandBuilder = new UICommandBuilder();
             UIEventBuilder eventBuilder = new UIEventBuilder();
@@ -82,6 +116,37 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
             UIEventBuilder eventBuilder = new UIEventBuilder();
             this.buildList(ref, commandBuilder, eventBuilder, store);
             this.sendUpdate(commandBuilder, eventBuilder, false);
+        }
+        if (data.checkbox != null) {
+            if (data.checkbox.equals("CleanInv")) {
+                var player = store.getComponent(ref, Player.getComponentType());
+                for (short slot = 0; slot < player.getInventory().getStorage().getCapacity(); slot++) {
+                    var entry = player.getInventory().getStorage().getItemStack(slot);
+                    if (entry != null) depositItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), player.getInventory().getStorage(), slot, entry.getQuantity(), true);
+                }
+                this.nearbyItems = InventoryUtils.collectNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange());
+                UICommandBuilder commandBuilder = new UICommandBuilder();
+                UIEventBuilder eventBuilder = new UIEventBuilder();
+                this.buildList(ref, commandBuilder, eventBuilder, store);
+                this.sendUpdate(commandBuilder, eventBuilder, false);
+            } else if (data.checkbox.equals("CleanHotbar")) {
+                var player = store.getComponent(ref, Player.getComponentType());
+                for (short slot = 0; slot < player.getInventory().getHotbar().getCapacity(); slot++) {
+                    var entry = player.getInventory().getHotbar().getItemStack(slot);
+                    if (entry != null) depositItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), player.getInventory().getHotbar(), slot, entry.getQuantity(), true);
+                }
+                this.nearbyItems = InventoryUtils.collectNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange());
+                UICommandBuilder commandBuilder = new UICommandBuilder();
+                UIEventBuilder eventBuilder = new UIEventBuilder();
+                this.buildList(ref, commandBuilder, eventBuilder, store);
+                this.sendUpdate(commandBuilder, eventBuilder, false);
+            } else {
+                LecternDataComponent component = (LecternDataComponent) blockEntity.getComponent(Main.LECTERN_COMPONENT).clone();
+                if (data.checkbox.equals("Deposit")) component.setDepositOnlyIfChestContains(!component.isDepositOnlyIfChestContains());
+                if (data.checkbox.equals("FindMode")) component.setFindMode(!component.isFindMode());
+                if (data.checkbox.equals("LeaveOne")) component.setLeaveOneItemPerSlotWhenExtracting(!component.isLeaveOneItemPerSlotWhenExtracting());
+                blockEntity.putComponent(Main.LECTERN_COMPONENT, component);
+            }
         }
     }
 
@@ -139,10 +204,81 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     }
 
     private void buildButtons(Map<String, Item> items, @Nonnull Player playerComponent, @Nonnull UICommandBuilder commandBuilder, @Nonnull UIEventBuilder eventBuilder) {
-        commandBuilder.clear("#SubcommandCards");
-        commandBuilder.set("#SubcommandSection.Visible", true);
+
+
+        commandBuilder.clear("#InventorySubcommandCards");
+        commandBuilder.set("#InventorySubcommandSection.Visible", true);
         int rowIndex = 0;
         int cardsInCurrentRow = 0;
+
+        for (short slot = 0; slot < playerComponent.getInventory().getStorage().getCapacity(); slot++) {
+            var entry = playerComponent.getInventory().getStorage().getItemStack(slot);
+            if (cardsInCurrentRow == 0) {
+                commandBuilder.appendInline("#InventorySubcommandCards", "Group { LayoutMode: Left; Anchor: (Bottom: 0); }");
+            }
+            commandBuilder.append("#InventorySubcommandCards[" + rowIndex + "]", "Pages/Buuz135_WhereThisAt_FindSearchItemIcon.ui");
+            if (entry != null) {
+                Item item = entry.getItem();
+                var tooltip = MessageHelper.multiLine();
+                tooltip.append(Message.translation(item.getTranslationKey()).bold(true).color("#93844c")).nl();
+                tooltip.append(Message.raw("Amount: " + entry.getQuantity())).nl();
+                tooltip.nl();
+                tooltip.append(Message.raw("Left Click:").bold(true).color("#93844c"));
+                tooltip.append(Message.raw(" Deposit Full Stack (" + item.getMaxStack() + ")")).nl();
+                tooltip.append(Message.raw("Right Click:").bold(true).color("#93844c"));
+                tooltip.append(Message.raw(" Deposit One Item"));
+                commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "].TooltipTextSpans", tooltip.build());
+                commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemIcon.ItemId", item.getId());
+                commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemIcon.TooltipTextSpans", tooltip.build());
+                commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemAmount.Text", NumberUtils.getFormatedBigNumber(entry.getQuantity()));
+                eventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemGroupButton", EventData.of("DepositItem", "Storage" + ":" + slot + ":" + item.getMaxStack()));
+                eventBuilder.addEventBinding(CustomUIEventBindingType.RightClicking, "#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemGroupButton", EventData.of("DepositItem", "Storage" + ":" + slot + ":" + 1));
+            }
+
+            ++cardsInCurrentRow;
+            if (cardsInCurrentRow >= 9) {
+                cardsInCurrentRow = 0;
+                ++rowIndex;
+            }
+        }
+
+        for (short slot = 0; slot < playerComponent.getInventory().getHotbar().getCapacity(); slot++) {
+            var entry = playerComponent.getInventory().getHotbar().getItemStack(slot);
+            if (cardsInCurrentRow == 0) {
+                commandBuilder.appendInline("#InventorySubcommandCards", "Group { LayoutMode: Left; Anchor: (Bottom: 0); }");
+            }
+            commandBuilder.append("#InventorySubcommandCards[" + rowIndex + "]", "Pages/Buuz135_WhereThisAt_FindSearchItemIcon.ui");
+            if (entry != null) {
+                Item item = entry.getItem();
+                var tooltip = MessageHelper.multiLine();
+                tooltip.append(Message.translation(item.getTranslationKey()).bold(true).color("#93844c")).nl();
+                tooltip.append(Message.raw("Amount: " + entry.getQuantity())).nl();
+                tooltip.nl();
+                tooltip.append(Message.raw("Left Click:").bold(true).color("#93844c"));
+                tooltip.append(Message.raw(" Deposit Full Stack (" + item.getMaxStack() + ")")).nl();
+                tooltip.append(Message.raw("Right Click:").bold(true).color("#93844c"));
+                tooltip.append(Message.raw(" Deposit One Item"));
+
+                commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "].TooltipTextSpans", tooltip.build());
+                commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemIcon.ItemId", item.getId());
+                commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemIcon.TooltipTextSpans", tooltip.build());
+                commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemAmount.Text", NumberUtils.getFormatedBigNumber(entry.getQuantity()));
+                eventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemGroupButton", EventData.of("DepositItem", "Hotbar" + ":" + slot + ":" + item.getMaxStack()));
+                eventBuilder.addEventBinding(CustomUIEventBindingType.RightClicking, "#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemGroupButton", EventData.of("DepositItem", "Hotbar" + ":" + slot + ":" + 1));
+            }
+
+            ++cardsInCurrentRow;
+            if (cardsInCurrentRow >= 9) {
+                cardsInCurrentRow = 0;
+                ++rowIndex;
+            }
+        }
+
+        commandBuilder.clear("#SubcommandCards");
+        commandBuilder.set("#SubcommandSection.Visible", true);
+        rowIndex = 0;
+        cardsInCurrentRow = 0;
+
 
         for (Map.Entry<String, Item> entry : items.entrySet()) {
             Item item = entry.getValue();
@@ -154,35 +290,30 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
 
             commandBuilder.append("#SubcommandCards[" + rowIndex + "]", "Pages/Buuz135_WhereThisAt_FindSearchItemIcon.ui");
 
-            /*commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "].TooltipText", Message.join(
-                    Message.translation(item.getTranslationKey()),
-                    Message.raw("\n"),
-                    Message.translation(item.getTranslationKey())));*/
-
             var tooltip = MessageHelper.multiLine();
-            tooltip.append(Message.translation(item.getTranslationKey()).bold(true)).nl();
-            tooltip.append(Message.raw("Amount: " + nearbyItems.getOrDefault(entry.getKey(), 0)));
-
+            tooltip.append(Message.translation(item.getTranslationKey()).bold(true).color("#93844c")).nl();
+            tooltip.append(Message.raw("Amount: " + nearbyItems.getOrDefault(entry.getKey(), 0))).nl();
+            tooltip.nl();
+            tooltip.append(Message.raw("Left Click:").bold(true).color("#93844c"));
+            tooltip.append(Message.raw(" Full Stack (" + item.getMaxStack() + ")")).nl();
+            tooltip.append(Message.raw("Right Click:").bold(true).color("#93844c"));
+            tooltip.append(Message.raw(" One Item"));
 
             commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "].TooltipTextSpans", tooltip.build());
             commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemIcon.ItemId", entry.getKey());
             commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemIcon.TooltipTextSpans", tooltip.build());
             commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemAmount.Text", NumberUtils.getFormatedBigNumber(nearbyItems.getOrDefault(entry.getKey(), 0)));
-            //commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemName.TextSpans", Message.translation(item.getTranslationKey()));
-            //commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #SubcommandUsage.TextSpans", this.getSimplifiedUsage(item, playerComponent));
-            commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #GetButton.TooltipText", "Retrieve this item\n\nLeft Click: Full Stack\nRight Click: 1");
-            eventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #FindButton", EventData.of("FindItem", entry.getKey()));
-            eventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #GetButton", EventData.of("GetItem", entry.getKey() + ":" + item.getMaxStack()));
-            eventBuilder.addEventBinding(CustomUIEventBindingType.RightClicking, "#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #GetButton", EventData.of("GetItem", entry.getKey() + ":" + 1));
+            //eventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #FindButton", EventData.of("FindItem", entry.getKey()));
+            //eventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "]", EventData.of("GetItem", entry.getKey() + ":" + item.getMaxStack()));
+            //eventBuilder.addEventBinding(CustomUIEventBindingType.RightClicking, "#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "]", EventData.of("GetItem", entry.getKey() + ":" + 1));
+            eventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemGroupButton", EventData.of("GetItem", entry.getKey() + ":" + item.getMaxStack()));
+            eventBuilder.addEventBinding(CustomUIEventBindingType.RightClicking, "#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemGroupButton", EventData.of("GetItem", entry.getKey() + ":" + 1));
             ++cardsInCurrentRow;
-            if (cardsInCurrentRow >= 8) {
+            if (cardsInCurrentRow >= 9) {
                 cardsInCurrentRow = 0;
                 ++rowIndex;
             }
         }
-
-
-        //commandBuilder.set("#BackButton.Visible", !this.subcommandBreadcrumb.isEmpty());
     }
 
     private void notifyNearbyItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, String name){
@@ -212,12 +343,9 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                 }
             }
         }
-
-
-
     }
 
-    private void extractItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, String name, int amount){
+    private void extractItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, String name, int amount, boolean leaveOne){
         var scannedContainers = new ArrayList<ItemContainer>();
         var position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
         var playedSound = false;
@@ -236,10 +364,15 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                             if (stack != null && !stack.isEmpty() && stack.getItem().getId().equals(name)) {
                                 var player = store.getComponent(ref, Player.getComponentType());
                                 if (player.getInventory().getStorage().canAddItemStack(stack)) {
-                                    var transaction = inventory.removeItemStack(stack.withQuantity(Math.min(stack.getQuantity(), amount)));
-                                    if (transaction.succeeded() && transaction.getQuery() != null) {
-                                        player.getInventory().getStorage().addItemStack(transaction.getQuery());
-                                        amount -= transaction.getQuery().getQuantity();
+                                    var amountToExtract = Math.min(stack.getQuantity(), amount);
+                                    if (leaveOne){
+                                        if (stack.getQuantity() == 1) continue;
+                                        amountToExtract = Math.min(stack.getQuantity() - 1, amount);
+                                    }
+                                    var transaction = inventory.removeItemStackFromSlot(i, amountToExtract);
+                                    if (transaction.succeeded() && transaction.getOutput() != null) {
+                                        player.getInventory().getStorage().addItemStack(transaction.getOutput());
+                                        amount -= transaction.getOutput().getQuantity();
                                         if (!playedSound) {
                                             playedSound = true;
                                             var indext = SoundEvent.getAssetMap().getIndex("Buuz135_WhereThisAt_SFX_Custom_Player_Pickup_Item");
@@ -254,9 +387,66 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                 }
             }
         }
+    }
+
+    private void depositItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, ItemContainer inventory, int inventorySlot, int amount, boolean depositOnlyIfChestContains){
+        var transaction = inventory.removeItemStackFromSlot((short) inventorySlot, amount, false, true);
 
 
+        var position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
 
+        if (transaction.succeeded()){
+            //System.out.println("Removed " + amount + " from slot " + inventorySlot);
+            var output = transaction.getOutput();
+            output = deposit(world, ref, store, range, position, output, depositOnlyIfChestContains);
+
+            if (output != null && !output.isEmpty()) {
+                inventory.addItemStackToSlot((short) inventorySlot, output);
+            }
+        }
+    }
+
+    private ItemStack deposit(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, Vector3d position, ItemStack output, boolean requireItemPresent){
+        var scannedContainers = new ArrayList<ItemContainer>();
+        var playedSound = false;
+        for (int x = -range; x <= range; x++) {
+            for (int y = -range; y < range; y++) {
+                for (int z = -range; z <= range; z++) {
+                    if (!InventoryUtils.isBlockInteractable(ref, world, (int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z)))
+                        continue;
+                    var blocktype = world.getState((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z), true);
+                    if (blocktype instanceof ItemContainerState containerState) {
+                        var inventoryOther = containerState.getItemContainer();
+                        if (scannedContainers.contains(inventoryOther)) continue;
+                        scannedContainers.add(inventoryOther);
+                        if (requireItemPresent && !doesInventoryContain(inventoryOther, output)) continue;
+
+                        var tempTransaction = inventoryOther.addItemStack(output);
+                        if (tempTransaction.succeeded()) {
+                            if (!playedSound) {
+                                playedSound = true;
+                                var indext = SoundEvent.getAssetMap().getIndex("Buuz135_WhereThisAt_SFX_Custom_Player_Pickup_Item");
+                                SoundUtil.playSoundEvent2dToPlayer(store.getComponent(ref, PlayerRef.getComponentType()), indext, SoundCategory.UI);
+                            }
+
+                            output = tempTransaction.getRemainder();
+                            if (output == null || output.isEmpty()){
+                                return output;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return output;
+    }
+
+    public boolean doesInventoryContain(ItemContainer inventory, ItemStack stack){
+        for (short slot = 0; slot < inventory.getCapacity(); slot++) {
+            if (ItemStack.isSameItemType(stack, inventory.getItemStack(slot))) return true;
+        }
+
+        return false;
     }
 
     private MessageHelper.ML addTooltipLine(MessageHelper.ML tooltip, String key, int value) {
@@ -290,15 +480,21 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     public static class SearchGuiData {
         static final String KEY_FIND_ITEM = "FindItem";
         static final String KEY_GET_ITEM = "GetItem";
+        static final String KEY_DEPOSIT_ITEM = "DepositItem";
+        static final String KEY_CHECKBOX = "Checkbox";
         static final String KEY_SEARCH_QUERY = "@SearchQuery";
         public static final BuilderCodec<SearchGuiData> CODEC = BuilderCodec.<SearchGuiData>builder(SearchGuiData.class, SearchGuiData::new)
                 .addField(new KeyedCodec<>(KEY_SEARCH_QUERY, Codec.STRING), (searchGuiData, s) -> searchGuiData.searchQuery = s, searchGuiData -> searchGuiData.searchQuery)
+                .addField(new KeyedCodec<>(KEY_CHECKBOX, Codec.STRING), (searchGuiData, b) -> searchGuiData.checkbox = b, searchGuiData -> searchGuiData.checkbox)
                 .addField(new KeyedCodec<>(KEY_FIND_ITEM, Codec.STRING), (searchGuiData, s) -> searchGuiData.findItem = s, searchGuiData -> searchGuiData.findItem)
-                .addField(new KeyedCodec<>(KEY_GET_ITEM, Codec.STRING), (searchGuiData, s) -> searchGuiData.getItem = s, searchGuiData -> searchGuiData.getItem).build();
+                .addField(new KeyedCodec<>(KEY_GET_ITEM, Codec.STRING), (searchGuiData, s) -> searchGuiData.getItem = s, searchGuiData -> searchGuiData.getItem)
+                .addField(new KeyedCodec<>(KEY_DEPOSIT_ITEM, Codec.STRING), (searchGuiData, s) -> searchGuiData.depositItem = s, searchGuiData -> searchGuiData.depositItem).build();
 
         private String findItem;
         private String getItem;
+        private String depositItem;
         private String searchQuery;
+        private String checkbox;
 
     }
 

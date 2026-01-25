@@ -1,0 +1,9 @@
+# 1.0.4
+
+* Changed GUI to make it more compact
+* Added support to deposit items into chests, closes #2 closes #6
+  * Added a Button to clean inv or hotbar
+  * Added settings for inserting and extracting items like:
+    * Only insert if there is an item in the chest
+    * Leave 1 item in the slot when extracting
+* Fixed crashes issues when extracting items from chests closes #1
