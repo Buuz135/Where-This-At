@@ -23,20 +23,20 @@ import java.util.*;
 
 public class InventoryUtils {
 
-    public static HashMap<String, Integer> collectNearbyItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range){
+    public static InventoryScan collectNearbyItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range){
         HashMap<String, Integer> items = new HashMap<>();
-        var scannedContainers = new ArrayList<ItemContainer>();
+        var scannedContainers = new ArrayList<ScannedInventory>();
         var position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
         for (int x = -range; x <= range; x++) {
             for (int y = -range; y < range; y++) {
                 for (int z = -range; z <= range; z++) {
-                    if (!isBlockInteractable(ref, world, (int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z)))
-                        continue;
                     var blocktype = world.getState((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z), true);
                     if (blocktype instanceof ItemContainerState containerState) {
                         var inventory = containerState.getItemContainer();
-                        if (scannedContainers.contains(inventory)) continue;
-                        scannedContainers.add(inventory);
+                        if (scannedContainers.stream().anyMatch(scannedInventory -> scannedInventory.container().equals(inventory))) continue;
+                        if (!isBlockInteractable(ref, world, (int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z)))
+                            continue;
+                        scannedContainers.add(new ScannedInventory(inventory, containerState));
                         for (short i = 0; i < inventory.getCapacity(); i++) {
                             var stack = inventory.getItemStack(i);
                             if (stack != null && !stack.isEmpty()) {
@@ -48,11 +48,33 @@ public class InventoryUtils {
             }
         }
 
+        return new InventoryScan(sortItems(items), scannedContainers);
+    }
+
+    public static InventoryScan refreshScan(List<ScannedInventory> scannedInventories) {
+        HashMap<String, Integer> items = new HashMap<>();
+        for (ScannedInventory scannedInventory : scannedInventories) {
+            var inventory = scannedInventory.container();
+            for (short i = 0; i < inventory.getCapacity(); i++) {
+                var stack = inventory.getItemStack(i);
+                if (stack != null && !stack.isEmpty()) {
+                    items.put(stack.getItem().getId(), items.getOrDefault(stack.getItem().getId(), 0) + stack.getQuantity());
+                }
+            }
+        }
+        return new InventoryScan(sortItems(items), scannedInventories);
+    }
+
+    private static HashMap<String, Integer> sortItems(HashMap<String, Integer> items) {
         List<Map.Entry<String, Integer>> list = new LinkedList<>(items.entrySet());
         list.sort(Map.Entry.comparingByValue());
         list = list.reversed();
         return list.stream().collect(LinkedHashMap::new, (m, v) -> m.put(v.getKey(), v.getValue()), HashMap::putAll);
     }
+
+    public record InventoryScan(HashMap<String, Integer> items, List<ScannedInventory> scannedInventories) {}
+
+    public record ScannedInventory(ItemContainer container, ItemContainerState blockState) {}
 
 
     public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z){

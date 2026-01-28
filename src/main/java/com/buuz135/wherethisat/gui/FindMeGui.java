@@ -39,21 +39,24 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import javax.annotation.Nonnull;
-import java.awt.*;
+import java.awt.Color;
 import java.util.*;
+import java.util.List;
 
 public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> {
 
     private String searchQuery = "";
     private HashMap<String, Integer> nearbyItems;
+    private final List<InventoryUtils.ScannedInventory> scannedInventories;
     private final Map<String, Item> visibleItems = new LinkedHashMap<>();
     private final Holder<ChunkStore> blockEntity;
 
 
-    public FindMeGui(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime, String defaultSearchQuery, HashMap<String, Integer> nearbyItems, Holder<ChunkStore> blockEntity) {
+    public FindMeGui(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime, String defaultSearchQuery, HashMap<String, Integer> nearbyItems, List<InventoryUtils.ScannedInventory> scannedInventories, Holder<ChunkStore> blockEntity) {
         super(playerRef, lifetime, SearchGuiData.CODEC);
         this.searchQuery = defaultSearchQuery;
         this.nearbyItems = nearbyItems;
+        this.scannedInventories = scannedInventories;
         this.blockEntity = blockEntity;
     }
 
@@ -90,7 +93,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
             }
 
             extractItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), item, amount, component.isLeaveOneItemPerSlotWhenExtracting());
-            this.nearbyItems = InventoryUtils.collectNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange());
+            this.nearbyItems = InventoryUtils.refreshScan(this.scannedInventories).items();
             UICommandBuilder commandBuilder = new UICommandBuilder();
             UIEventBuilder eventBuilder = new UIEventBuilder();
             this.buildList(ref, commandBuilder, eventBuilder, store);
@@ -104,7 +107,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
             var amount = Integer.parseInt(split[2]);
             LecternDataComponent component = blockEntity.getComponent(Main.LECTERN_COMPONENT);
             depositItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), inventory.equals("Storage") ? player.getInventory().getStorage() : player.getInventory().getHotbar(), slot, amount, component.isDepositOnlyIfChestContains());
-            this.nearbyItems = InventoryUtils.collectNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange());
+            this.nearbyItems = InventoryUtils.refreshScan(this.scannedInventories).items();
             UICommandBuilder commandBuilder = new UICommandBuilder();
             UIEventBuilder eventBuilder = new UIEventBuilder();
             this.buildList(ref, commandBuilder, eventBuilder, store);
@@ -124,7 +127,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                     var entry = player.getInventory().getStorage().getItemStack(slot);
                     if (entry != null) depositItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), player.getInventory().getStorage(), slot, entry.getQuantity(), true);
                 }
-                this.nearbyItems = InventoryUtils.collectNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange());
+                this.nearbyItems = InventoryUtils.refreshScan(this.scannedInventories).items();
                 UICommandBuilder commandBuilder = new UICommandBuilder();
                 UIEventBuilder eventBuilder = new UIEventBuilder();
                 this.buildList(ref, commandBuilder, eventBuilder, store);
@@ -135,7 +138,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                     var entry = player.getInventory().getHotbar().getItemStack(slot);
                     if (entry != null) depositItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), player.getInventory().getHotbar(), slot, entry.getQuantity(), true);
                 }
-                this.nearbyItems = InventoryUtils.collectNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange());
+                this.nearbyItems = InventoryUtils.refreshScan(this.scannedInventories).items();
                 UICommandBuilder commandBuilder = new UICommandBuilder();
                 UIEventBuilder eventBuilder = new UIEventBuilder();
                 this.buildList(ref, commandBuilder, eventBuilder, store);
@@ -317,71 +320,48 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     }
 
     private void notifyNearbyItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, String name){
-        var scannedContainers = new ArrayList<ItemContainer>();
-        var position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
-        for (int x = -range; x <= range; x++) {
-            for (int y = -range; y < range; y++) {
-                for (int z = -range; z <= range; z++) {
-                    var blocktype = world.getState((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z), true);
-                    if (blocktype instanceof ItemContainerState containerState) {
-                        var inventory = containerState.getItemContainer();
-                        if (scannedContainers.contains(inventory)) continue;
-                        scannedContainers.add(inventory);
-                        for (short i = 0; i < inventory.getCapacity(); i++) {
-                            var stack = inventory.getItemStack(i);
-                            if (stack != null && !stack.isEmpty() && stack.getItem().getId().equals(name)) {
-                                var centered = blocktype.getCenteredBlockPosition();
-                                var boudingBox = Main.BOUNDING_BOXES.get(blocktype.getBlockType().getHitboxType());
-                                var rotatedBoundingBox = boudingBox.get(blocktype.getRotationIndex()).getBoundingBox();
-                                ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX() - rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
-                                ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX() + rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
-                                ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() - rotatedBoundingBox.depth() / 2D), store);
-                                ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() + rotatedBoundingBox.depth() / 2D), store);
-                            }
-                        }
-                    }
+        for (InventoryUtils.ScannedInventory scannedInventory : this.scannedInventories) {
+            var inventory = scannedInventory.container();
+            var blocktype = scannedInventory.blockState();
+            for (short i = 0; i < inventory.getCapacity(); i++) {
+                var stack = inventory.getItemStack(i);
+                if (stack != null && !stack.isEmpty() && stack.getItem().getId().equals(name)) {
+                    var centered = ((com.hypixel.hytale.server.core.universe.world.meta.BlockState)blocktype).getCenteredBlockPosition();
+                    var boudingBox = Main.BOUNDING_BOXES.get(((com.hypixel.hytale.server.core.universe.world.meta.BlockState)blocktype).getBlockType().getHitboxType());
+                    var rotatedBoundingBox = boudingBox.get(((com.hypixel.hytale.server.core.universe.world.meta.BlockState)blocktype).getRotationIndex()).getBoundingBox();
+                    ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX() - rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
+                    ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX() + rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
+                    ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() - rotatedBoundingBox.depth() / 2D), store);
+                    ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() + rotatedBoundingBox.depth() / 2D), store);
                 }
             }
         }
     }
 
     private void extractItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, String name, int amount, boolean leaveOne){
-        var scannedContainers = new ArrayList<ItemContainer>();
-        var position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
         var playedSound = false;
-        for (int x = -range; x <= range; x++) {
-            for (int y = -range; y < range; y++) {
-                for (int z = -range; z <= range; z++) {
-                    if (!InventoryUtils.isBlockInteractable(ref, world, (int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z)))
-                        continue;
-                    var blocktype = world.getState((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z), true);
-                    if (blocktype instanceof ItemContainerState containerState) {
-                        var inventory = containerState.getItemContainer();
-                        if (scannedContainers.contains(inventory)) continue;
-                        scannedContainers.add(inventory);
-                        for (short i = 0; i < inventory.getCapacity(); i++) {
-                            var stack = inventory.getItemStack(i);
-                            if (stack != null && !stack.isEmpty() && stack.getItem().getId().equals(name)) {
-                                var player = store.getComponent(ref, Player.getComponentType());
-                                if (player.getInventory().getStorage().canAddItemStack(stack)) {
-                                    var amountToExtract = Math.min(stack.getQuantity(), amount);
-                                    if (leaveOne){
-                                        if (stack.getQuantity() == 1) continue;
-                                        amountToExtract = Math.min(stack.getQuantity() - 1, amount);
-                                    }
-                                    var transaction = inventory.removeItemStackFromSlot(i, amountToExtract);
-                                    if (transaction.succeeded() && transaction.getOutput() != null) {
-                                        player.getInventory().getStorage().addItemStack(transaction.getOutput());
-                                        amount -= transaction.getOutput().getQuantity();
-                                        if (!playedSound) {
-                                            playedSound = true;
-                                            var indext = SoundEvent.getAssetMap().getIndex("Buuz135_WhereThisAt_SFX_Custom_Player_Pickup_Item");
-                                            SoundUtil.playSoundEvent2dToPlayer(store.getComponent(ref, PlayerRef.getComponentType()), indext, SoundCategory.UI);
-                                        }
-                                        if (amount <= 0) return;
-                                    }
-                                }
+        for (InventoryUtils.ScannedInventory scannedInventory : this.scannedInventories) {
+            var inventory = scannedInventory.container();
+            for (short i = 0; i < inventory.getCapacity(); i++) {
+                var stack = inventory.getItemStack(i);
+                if (stack != null && !stack.isEmpty() && stack.getItem().getId().equals(name)) {
+                    var player = store.getComponent(ref, Player.getComponentType());
+                    if (player.getInventory().getStorage().canAddItemStack(stack)) {
+                        var amountToExtract = Math.min(stack.getQuantity(), amount);
+                        if (leaveOne){
+                            if (stack.getQuantity() == 1) continue;
+                            amountToExtract = Math.min(stack.getQuantity() - 1, amount);
+                        }
+                        var transaction = inventory.removeItemStackFromSlot(i, amountToExtract);
+                        if (transaction.succeeded() && transaction.getOutput() != null) {
+                            player.getInventory().getStorage().addItemStack(transaction.getOutput());
+                            amount -= transaction.getOutput().getQuantity();
+                            if (!playedSound) {
+                                playedSound = true;
+                                var indext = SoundEvent.getAssetMap().getIndex("Buuz135_WhereThisAt_SFX_Custom_Player_Pickup_Item");
+                                SoundUtil.playSoundEvent2dToPlayer(store.getComponent(ref, PlayerRef.getComponentType()), indext, SoundCategory.UI);
                             }
+                            if (amount <= 0) return;
                         }
                     }
                 }
@@ -392,13 +372,10 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     private void depositItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, ItemContainer inventory, int inventorySlot, int amount, boolean depositOnlyIfChestContains){
         var transaction = inventory.removeItemStackFromSlot((short) inventorySlot, amount, false, true);
 
-
-        var position = store.getComponent(ref, TransformComponent.getComponentType()).getPosition();
-
         if (transaction.succeeded()){
             //System.out.println("Removed " + amount + " from slot " + inventorySlot);
             var output = transaction.getOutput();
-            output = deposit(world, ref, store, range, position, output, depositOnlyIfChestContains);
+            output = deposit(world, ref, store, range, output, depositOnlyIfChestContains);
 
             if (output != null && !output.isEmpty()) {
                 inventory.addItemStackToSlot((short) inventorySlot, output);
@@ -406,35 +383,23 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
         }
     }
 
-    private ItemStack deposit(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, Vector3d position, ItemStack output, boolean requireItemPresent){
-        var scannedContainers = new ArrayList<ItemContainer>();
+    private ItemStack deposit(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, ItemStack output, boolean requireItemPresent){
         var playedSound = false;
-        for (int x = -range; x <= range; x++) {
-            for (int y = -range; y < range; y++) {
-                for (int z = -range; z <= range; z++) {
-                    if (!InventoryUtils.isBlockInteractable(ref, world, (int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z)))
-                        continue;
-                    var blocktype = world.getState((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z), true);
-                    if (blocktype instanceof ItemContainerState containerState) {
-                        var inventoryOther = containerState.getItemContainer();
-                        if (scannedContainers.contains(inventoryOther)) continue;
-                        scannedContainers.add(inventoryOther);
-                        if (requireItemPresent && !doesInventoryContain(inventoryOther, output)) continue;
+        for (InventoryUtils.ScannedInventory scannedInventory : this.scannedInventories) {
+            var inventoryOther = scannedInventory.container();
+            if (requireItemPresent && !doesInventoryContain(inventoryOther, output)) continue;
 
-                        var tempTransaction = inventoryOther.addItemStack(output);
-                        if (tempTransaction.succeeded()) {
-                            if (!playedSound) {
-                                playedSound = true;
-                                var indext = SoundEvent.getAssetMap().getIndex("Buuz135_WhereThisAt_SFX_Custom_Player_Pickup_Item");
-                                SoundUtil.playSoundEvent2dToPlayer(store.getComponent(ref, PlayerRef.getComponentType()), indext, SoundCategory.UI);
-                            }
+            var tempTransaction = inventoryOther.addItemStack(output);
+            if (tempTransaction.succeeded()) {
+                if (!playedSound) {
+                    playedSound = true;
+                    var indext = SoundEvent.getAssetMap().getIndex("Buuz135_WhereThisAt_SFX_Custom_Player_Pickup_Item");
+                    SoundUtil.playSoundEvent2dToPlayer(store.getComponent(ref, PlayerRef.getComponentType()), indext, SoundCategory.UI);
+                }
 
-                            output = tempTransaction.getRemainder();
-                            if (output == null || output.isEmpty()){
-                                return output;
-                            }
-                        }
-                    }
+                output = tempTransaction.getRemainder();
+                if (output == null || output.isEmpty()){
+                    return output;
                 }
             }
         }

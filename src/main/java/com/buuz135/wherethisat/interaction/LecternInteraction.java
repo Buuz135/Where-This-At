@@ -29,13 +29,13 @@ public class LecternInteraction extends SimpleBlockInteraction{
         var ref = interactionContext.getEntity();
         var store = ref.getStore();
         var player = ref.getStore().getComponent(ref, Player.getComponentType());
-        var nearbyItems = InventoryUtils.collectNearbyItems(world, ref, store, Main.CONFIG.get().getRange());
+        var scan = InventoryUtils.collectNearbyItems(world, ref, store, Main.CONFIG.get().getRange());
         PlayerRef playerRefComponent = store.getComponent(ref, PlayerRef.getComponentType());
         var defaultSearch = "";
 
         var blockType = world.getBlockType(vector3i);
 
-        player.getPageManager().openCustomPage(ref, store, new FindMeGui(playerRefComponent, CustomPageLifetime.CanDismiss, defaultSearch, nearbyItems, blockType.getBlockEntity()));
+        player.getPageManager().openCustomPage(ref, store, new FindMeGui(playerRefComponent, CustomPageLifetime.CanDismiss, defaultSearch, scan.items(), scan.scannedInventories(), blockType.getBlockEntity()));
     }
 
     @Override

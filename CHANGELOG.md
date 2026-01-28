@@ -1,3 +1,8 @@
+# 1.0.5
+
+* Improved performance by only checking if something can be interacted if its an inventory
+* Improved performance by caching the scanned blocks
+
 # 1.0.4
 
 * Changed GUI to make it more compact
