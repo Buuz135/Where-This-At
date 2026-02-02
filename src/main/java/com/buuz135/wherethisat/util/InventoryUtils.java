@@ -79,10 +79,12 @@ public class InventoryUtils {
 
     public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z){
         if (!ref.getStore().isInThread()) return false;
+        var blockType = world.getBlockType(x, y, z);
+        if (blockType == null && blockType.getId().toLowerCase(Locale.ROOT).contains("trash")) return false;
         var player = ref.getStore().getComponent(ref, Player.getComponentType());
         var playerRef = ref.getStore().getComponent(ref, PlayerRef.getComponentType());
         var interactionManager = new InteractionManager(player, playerRef, new InteractionSimulationHandler());
-        var event = new UseBlockEvent.Pre(InteractionType.Use, InteractionContext.forProxyEntity(interactionManager, player, ref), new Vector3i(x, y, z), world.getBlockType(x, y, z));
+        var event = new UseBlockEvent.Pre(InteractionType.Use, InteractionContext.forProxyEntity(interactionManager, player, ref), new Vector3i(x, y, z), blockType);
         ref.getStore().invoke(ref, event);
         return !event.isCancelled();
     }

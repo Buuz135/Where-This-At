@@ -1,3 +1,7 @@
+# 1.0.6
+
+* Ignore trash cans as a possible inventory, closes #11 closes #13
+
 # 1.0.5
 
 * Improved performance by only checking if something can be interacted if its an inventory
