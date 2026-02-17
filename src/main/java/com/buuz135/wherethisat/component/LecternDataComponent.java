@@ -52,7 +52,9 @@ public class LecternDataComponent implements Component<ChunkStore> {
     @NullableDecl
     @Override
     public Component<ChunkStore> clone() {
-        return new LecternDataComponent(depositOnlyIfChestContains, findMode);
+        var component = new LecternDataComponent(depositOnlyIfChestContains, findMode);
+        component.setLeaveOneItemPerSlotWhenExtracting(leaveOneItemPerSlotWhenExtracting);
+        return component;
     }
 
 }

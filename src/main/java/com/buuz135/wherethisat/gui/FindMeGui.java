@@ -9,10 +9,10 @@ import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.ComponentAccessor;
-import com.hypixel.hytale.component.Holder;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.math.vector.Vector3i;
 import com.hypixel.hytale.protocol.SoundCategory;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
 import com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType;
@@ -24,7 +24,6 @@ import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
-import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.i18n.I18nModule;
 import com.hypixel.hytale.server.core.ui.builder.EventData;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
@@ -33,13 +32,11 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
 import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.meta.state.ItemContainerState;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import javax.annotation.Nonnull;
-import java.awt.Color;
 import java.util.*;
 import java.util.List;
 
@@ -49,20 +46,23 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     private HashMap<String, Integer> nearbyItems;
     private final List<InventoryUtils.ScannedInventory> scannedInventories;
     private final Map<String, Item> visibleItems = new LinkedHashMap<>();
-    private final Holder<ChunkStore> blockEntity;
+    private final ChunkStore chunkStore;
+    private final Ref<ChunkStore> chunkStoreRef;
 
 
-    public FindMeGui(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime, String defaultSearchQuery, HashMap<String, Integer> nearbyItems, List<InventoryUtils.ScannedInventory> scannedInventories, Holder<ChunkStore> blockEntity) {
+    public FindMeGui(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime, String defaultSearchQuery, HashMap<String, Integer> nearbyItems, List<InventoryUtils.ScannedInventory> scannedInventories, ChunkStore chunkStore, Ref<ChunkStore> chunkStoreRef) {
         super(playerRef, lifetime, SearchGuiData.CODEC);
         this.searchQuery = defaultSearchQuery;
         this.nearbyItems = nearbyItems;
         this.scannedInventories = scannedInventories;
-        this.blockEntity = blockEntity;
+        this.chunkStore = chunkStore;
+        this.chunkStoreRef = chunkStoreRef;
     }
 
     @Override
     public void build(@Nonnull Ref<EntityStore> ref, @Nonnull UICommandBuilder uiCommandBuilder, @Nonnull UIEventBuilder uiEventBuilder, @Nonnull Store<EntityStore> store) {
-        LecternDataComponent component = blockEntity.getComponent(Main.LECTERN_COMPONENT);
+        LecternDataComponent component = getComponent();
+        System.out.println(component);
         uiCommandBuilder.append("Pages/Buuz135_WhereThisAt_FindGui.ui");
         uiCommandBuilder.set("#SearchInput.Value", this.searchQuery);
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#SearchInput", EventData.of("@SearchQuery", "#SearchInput.Value"), false);
@@ -85,7 +85,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
             var split = data.getItem.split(":");
             var item = split[0];
             var amount = Integer.parseInt(split[1]);
-            LecternDataComponent component = blockEntity.getComponent(Main.LECTERN_COMPONENT);
+            LecternDataComponent component = getComponent();
             if (component.isFindMode()) {
                 notifyNearbyItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), item);
                 this.close();
@@ -105,7 +105,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
             var inventory = split[0];
             var slot = Integer.parseInt(split[1]);
             var amount = Integer.parseInt(split[2]);
-            LecternDataComponent component = blockEntity.getComponent(Main.LECTERN_COMPONENT);
+            LecternDataComponent component = getComponent();
             depositItems(store.getExternalData().getWorld(), ref, store, Main.CONFIG.get().getRange(), inventory.equals("Storage") ? player.getInventory().getStorage() : player.getInventory().getHotbar(), slot, amount, component.isDepositOnlyIfChestContains());
             this.nearbyItems = InventoryUtils.refreshScan(this.scannedInventories).items();
             UICommandBuilder commandBuilder = new UICommandBuilder();
@@ -144,11 +144,12 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                 this.buildList(ref, commandBuilder, eventBuilder, store);
                 this.sendUpdate(commandBuilder, eventBuilder, false);
             } else {
-                LecternDataComponent component = (LecternDataComponent) blockEntity.getComponent(Main.LECTERN_COMPONENT).clone();
+                LecternDataComponent component = (LecternDataComponent) getComponent().clone();
                 if (data.checkbox.equals("Deposit")) component.setDepositOnlyIfChestContains(!component.isDepositOnlyIfChestContains());
                 if (data.checkbox.equals("FindMode")) component.setFindMode(!component.isFindMode());
                 if (data.checkbox.equals("LeaveOne")) component.setLeaveOneItemPerSlotWhenExtracting(!component.isLeaveOneItemPerSlotWhenExtracting());
-                blockEntity.putComponent(Main.LECTERN_COMPONENT, component);
+                chunkStore.getStore().putComponent(chunkStoreRef, Main.LECTERN_COMPONENT, component);
+                System.out.println(getComponent());
             }
         }
     }
@@ -207,8 +208,6 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     }
 
     private void buildButtons(Map<String, Item> items, @Nonnull Player playerComponent, @Nonnull UICommandBuilder commandBuilder, @Nonnull UIEventBuilder eventBuilder) {
-
-
         commandBuilder.clear("#InventorySubcommandCards");
         commandBuilder.set("#InventorySubcommandSection.Visible", true);
         int rowIndex = 0;
@@ -326,9 +325,9 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
             for (short i = 0; i < inventory.getCapacity(); i++) {
                 var stack = inventory.getItemStack(i);
                 if (stack != null && !stack.isEmpty() && stack.getItem().getId().equals(name)) {
-                    var centered = ((com.hypixel.hytale.server.core.universe.world.meta.BlockState)blocktype).getCenteredBlockPosition();
-                    var boudingBox = Main.BOUNDING_BOXES.get(((com.hypixel.hytale.server.core.universe.world.meta.BlockState)blocktype).getBlockType().getHitboxType());
-                    var rotatedBoundingBox = boudingBox.get(((com.hypixel.hytale.server.core.universe.world.meta.BlockState)blocktype).getRotationIndex()).getBoundingBox();
+                    var centered = blocktype.getCenteredBlockPosition();
+                    var boudingBox = Main.BOUNDING_BOXES.get(blocktype.getBlockType().getHitboxType());
+                    var rotatedBoundingBox = boudingBox.get(blocktype.getRotationIndex()).getBoundingBox();
                     ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX() - rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
                     ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX() + rotatedBoundingBox.width() / 2D, centered.getY() - 0.35, centered.getZ()), store);
                     ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() - rotatedBoundingBox.depth() / 2D), store);
@@ -414,32 +413,12 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
         return false;
     }
 
-    private MessageHelper.ML addTooltipLine(MessageHelper.ML tooltip, String key, int value) {
-        return this.addTooltipLine(tooltip, key, value + "");
-    }
-
-    private MessageHelper.ML addTooltipLine(MessageHelper.ML tooltip, String key, double value) {
-        return this.addTooltipLine(tooltip, key, value + "");
-    }
-
     private MessageHelper.ML addTooltipLine(MessageHelper.ML tooltip, String key, String value) {
         return tooltip.append(Message.raw(key).color("#E8A93B").bold(true)).append(Message.raw(value)).nl();
     }
 
-    private MessageHelper.ML addTooltipLine(MessageHelper.ML tooltip, String key, Message value) {
-        return tooltip.append(Message.raw(key).color("#E8A93B").bold(true)).append(value).nl();
-    }
-
-    private Message formatBoolean(boolean value){
-        return value ? Message.raw("Yes").color(Color.GREEN) : Message.raw("No").color(Color.RED);
-    }
-
-    private String formatBench(String name){
-        name = name.replaceAll("_", " ");
-        if (!name.contains("Bench")){
-            name += " Bench";
-        }
-        return name;
+    private LecternDataComponent getComponent(){
+        return chunkStore.getStore().getComponent(chunkStoreRef, Main.LECTERN_COMPONENT);
     }
 
     public static class SearchGuiData {

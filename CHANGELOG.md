@@ -1,6 +1,7 @@
 # 1.0.7
 
 * Improved tooltip design
+* Fixed Lectern settings not saving properly
 
 # 1.0.6
 
