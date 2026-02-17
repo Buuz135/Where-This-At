@@ -3,13 +3,14 @@ $C = "../Common.ui";
 
 
 Group {
-
+  TextTooltipStyle: $C.@DefaultTextTooltipStyle;
   
   Group{
     Anchor: (Width: 64, Bottom: 2, Right: 2, Height: 64);
     Padding: 4;
     Background: "../Pages/Memories/SlotDefault.png";
     LayoutMode: Top;
+    TextTooltipStyle: $C.@DefaultTextTooltipStyle;
 
     Group{
       ItemIcon #ItemIcon {
@@ -32,6 +33,7 @@ Group {
   }
   Button #ItemGroupButton{
     Anchor: (Width: 64, Bottom: 2, Right: 2, Height: 64);
+    TextTooltipStyle: $C.@DefaultTextTooltipStyle;
   }
 
 }

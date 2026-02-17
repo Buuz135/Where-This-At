@@ -113,6 +113,7 @@ $C.@PageOverlay {
               Padding: (Left: 1, Right: 1, Top: 2, Bottom: 1);
               Style: @CusSecondaryTextButtonStyle;
               TooltipText: "Deposits all of the items from your hotbar to chests that contain the item.";
+              TextTooltipStyle: $C.@DefaultTextTooltipStyle;
             }
 
             $C.@SecondaryTextButton #CleanInvButton {
@@ -121,6 +122,7 @@ $C.@PageOverlay {
               Padding: (Left: 1, Right: 1, Top: 2, Bottom: 1);
               Style: @CusSecondaryTextButtonStyle;
               TooltipText: "Deposits all of the items from your inventory to chests that contain the item.";
+              TextTooltipStyle: $C.@DefaultTextTooltipStyle;
             }
           }
         }

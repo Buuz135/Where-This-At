@@ -223,12 +223,12 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
             if (entry != null) {
                 Item item = entry.getItem();
                 var tooltip = MessageHelper.multiLine();
-                tooltip.append(Message.translation(item.getTranslationKey()).bold(true).color("#93844c")).nl();
+                tooltip.append(Message.translation(item.getTranslationKey()).bold(true).color("#E8A93B")).nl();
                 tooltip.append(Message.raw("Amount: " + entry.getQuantity())).nl();
                 tooltip.nl();
-                tooltip.append(Message.raw("Left Click:").bold(true).color("#93844c"));
+                tooltip.append(Message.raw("Left Click:").bold(true).color("#E8A93B"));
                 tooltip.append(Message.raw(" Deposit Full Stack (" + item.getMaxStack() + ")")).nl();
-                tooltip.append(Message.raw("Right Click:").bold(true).color("#93844c"));
+                tooltip.append(Message.raw("Right Click:").bold(true).color("#E8A93B"));
                 tooltip.append(Message.raw(" Deposit One Item"));
                 commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "].TooltipTextSpans", tooltip.build());
                 commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "] #ItemIcon.ItemId", item.getId());
@@ -254,12 +254,12 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
             if (entry != null) {
                 Item item = entry.getItem();
                 var tooltip = MessageHelper.multiLine();
-                tooltip.append(Message.translation(item.getTranslationKey()).bold(true).color("#93844c")).nl();
+                tooltip.append(Message.translation(item.getTranslationKey()).bold(true).color("#E8A93B")).nl();
                 tooltip.append(Message.raw("Amount: " + entry.getQuantity())).nl();
                 tooltip.nl();
-                tooltip.append(Message.raw("Left Click:").bold(true).color("#93844c"));
+                tooltip.append(Message.raw("Left Click:").bold(true).color("#E8A93B"));
                 tooltip.append(Message.raw(" Deposit Full Stack (" + item.getMaxStack() + ")")).nl();
-                tooltip.append(Message.raw("Right Click:").bold(true).color("#93844c"));
+                tooltip.append(Message.raw("Right Click:").bold(true).color("#E8A93B"));
                 tooltip.append(Message.raw(" Deposit One Item"));
 
                 commandBuilder.set("#InventorySubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "].TooltipTextSpans", tooltip.build());
@@ -294,12 +294,12 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
             commandBuilder.append("#SubcommandCards[" + rowIndex + "]", "Pages/Buuz135_WhereThisAt_FindSearchItemIcon.ui");
 
             var tooltip = MessageHelper.multiLine();
-            tooltip.append(Message.translation(item.getTranslationKey()).bold(true).color("#93844c")).nl();
+            tooltip.append(Message.translation(item.getTranslationKey()).bold(true).color("#E8A93B")).nl();
             tooltip.append(Message.raw("Amount: " + nearbyItems.getOrDefault(entry.getKey(), 0))).nl();
             tooltip.nl();
-            tooltip.append(Message.raw("Left Click:").bold(true).color("#93844c"));
+            tooltip.append(Message.raw("Left Click:").bold(true).color("#E8A93B"));
             tooltip.append(Message.raw(" Full Stack (" + item.getMaxStack() + ")")).nl();
-            tooltip.append(Message.raw("Right Click:").bold(true).color("#93844c"));
+            tooltip.append(Message.raw("Right Click:").bold(true).color("#E8A93B"));
             tooltip.append(Message.raw(" One Item"));
 
             commandBuilder.set("#SubcommandCards[" + rowIndex + "][" + cardsInCurrentRow + "].TooltipTextSpans", tooltip.build());
@@ -423,11 +423,11 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     }
 
     private MessageHelper.ML addTooltipLine(MessageHelper.ML tooltip, String key, String value) {
-        return tooltip.append(Message.raw(key).color("#93844c").bold(true)).append(Message.raw(value)).nl();
+        return tooltip.append(Message.raw(key).color("#E8A93B").bold(true)).append(Message.raw(value)).nl();
     }
 
     private MessageHelper.ML addTooltipLine(MessageHelper.ML tooltip, String key, Message value) {
-        return tooltip.append(Message.raw(key).color("#93844c").bold(true)).append(value).nl();
+        return tooltip.append(Message.raw(key).color("#E8A93B").bold(true)).append(value).nl();
     }
 
     private Message formatBoolean(boolean value){

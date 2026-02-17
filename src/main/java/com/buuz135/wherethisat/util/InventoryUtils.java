@@ -76,7 +76,6 @@ public class InventoryUtils {
 
     public record ScannedInventory(ItemContainer container, ItemContainerState blockState) {}
 
-
     public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z){
         if (!ref.getStore().isInThread()) return false;
         var blockType = world.getBlockType(x, y, z);
