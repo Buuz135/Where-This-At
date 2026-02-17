@@ -1,3 +1,7 @@
+# 1.0.7
+
+* Improved tooltip design
+
 # 1.0.6
 
 * Ignore trash cans as a possible inventory, closes #11 closes #13
