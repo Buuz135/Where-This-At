@@ -1,3 +1,7 @@
+# 1.0.8
+
+* Increased server version
+
 # 1.0.7
 
 * Improved tooltip design
