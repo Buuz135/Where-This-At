@@ -1,8 +1,8 @@
 package com.buuz135.wherethisat.util;
 
-import com.hypixel.hytale.component.Holder;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.math.vector.Vector3i;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
@@ -15,7 +15,6 @@ import com.hypixel.hytale.server.core.modules.entity.component.TransformComponen
 import com.hypixel.hytale.server.core.modules.interaction.InteractionSimulationHandler;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.*;
@@ -29,15 +28,19 @@ public class InventoryUtils {
         for (int x = -range; x <= range; x++) {
             for (int y = -range; y < range; y++) {
                 for (int z = -range; z <= range; z++) {
-                    var holder = world.getBlockComponentHolder((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z));
-                    if (holder == null) continue;
-                    var containerBlock = holder.getComponent(ItemContainerBlock.getComponentType());
+                    var worldChunk = world.getChunk(ChunkUtil.indexChunkFromBlock(position.getX() + x, position.getZ() + z));
+                    if (worldChunk == null) continue;
+                    var blockRef = worldChunk.getBlockComponentEntity((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z));
+
+                    if (blockRef == null) continue;
+
+                    var containerBlock = blockRef.getStore().getComponent(blockRef, ItemContainerBlock.getComponentType());
                     if (containerBlock != null) {
                         var inventory = containerBlock.getItemContainer();
                         if (scannedContainers.stream().anyMatch(scannedInventory -> scannedInventory.container().equals(inventory))) continue;
                         if (!isBlockInteractable(ref, world, (int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z)))
                             continue;
-                        scannedContainers.add(new ScannedInventory(inventory, holder));
+                        scannedContainers.add(new ScannedInventory(inventory, containerBlock));
                         for (short i = 0; i < inventory.getCapacity(); i++) {
                             var stack = inventory.getItemStack(i);
                             if (stack != null && !stack.isEmpty()) {
@@ -75,7 +78,7 @@ public class InventoryUtils {
 
     public record InventoryScan(HashMap<String, Integer> items, List<ScannedInventory> scannedInventories) {}
 
-    public record ScannedInventory(ItemContainer container, Holder<ChunkStore> holder) {}
+    public record ScannedInventory(ItemContainer container, ItemContainerBlock containerBlock) {}
 
     public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z){
         if (!ref.getStore().isInThread()) return false;

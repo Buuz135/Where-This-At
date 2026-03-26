@@ -1,3 +1,7 @@
+# 1.0.10
+
+* Fixed items not extracting properly
+
 # 1.0.9
 
 * Updated to Update 4

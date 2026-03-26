@@ -63,7 +63,6 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     @Override
     public void build(@Nonnull Ref<EntityStore> ref, @Nonnull UICommandBuilder uiCommandBuilder, @Nonnull UIEventBuilder uiEventBuilder, @Nonnull Store<EntityStore> store) {
         LecternDataComponent component = getComponent();
-        System.out.println(component);
         uiCommandBuilder.append("Pages/Buuz135_WhereThisAt_FindGui.ui");
         uiCommandBuilder.set("#SearchInput.Value", this.searchQuery);
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#SearchInput", EventData.of("@SearchQuery", "#SearchInput.Value"), false);
@@ -150,7 +149,6 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                 if (data.checkbox.equals("FindMode")) component.setFindMode(!component.isFindMode());
                 if (data.checkbox.equals("LeaveOne")) component.setLeaveOneItemPerSlotWhenExtracting(!component.isLeaveOneItemPerSlotWhenExtracting());
                 chunkStore.getStore().putComponent(chunkStoreRef, Main.LECTERN_COMPONENT, component);
-                System.out.println(getComponent());
             }
         }
     }
