@@ -24,6 +24,7 @@ import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
+import com.hypixel.hytale.server.core.modules.block.BlockModule;
 import com.hypixel.hytale.server.core.modules.i18n.I18nModule;
 import com.hypixel.hytale.server.core.ui.builder.EventData;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
@@ -319,6 +320,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
     }
 
     private void notifyNearbyItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, String name){
+        /* Disabled for now
         for (InventoryUtils.ScannedInventory scannedInventory : this.scannedInventories) {
             var inventory = scannedInventory.container();
             var blocktype = scannedInventory.blockState();
@@ -334,7 +336,7 @@ public class FindMeGui extends InteractiveCustomUIPage<FindMeGui.SearchGuiData> 
                     ParticleUtil.spawnParticleEffect( "Buuz135_WhereThisAt_Custom_Alerted", new Vector3d(centered.getX(), centered.getY() - 0.35, centered.getZ() + rotatedBoundingBox.depth() / 2D), store);
                 }
             }
-        }
+        }*/
     }
 
     private void extractItems(World world, Ref<EntityStore> ref, Store<EntityStore> store, int range, String name, int amount, boolean leaveOne){

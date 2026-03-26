@@ -1,7 +1,7 @@
 {
   "Group": "Buuz135",
   "Name": "WhereThisAt",
-  "Version": "1.0.8",
+  "Version": "1.0.9",
   "Description": "Find and deposit items nearby chests using a Lectern with a simple search bar.",
   "Authors": [
     {
@@ -12,7 +12,7 @@
     }
   ],
   "Website": "https://buuz135.com",
-  "ServerVersion": "2026.02.17-255364b8e",
+  "ServerVersion": "2026.03.25-89796e57b",
   "Dependencies": {
     "Hytale:EntityModule": "*"
   },

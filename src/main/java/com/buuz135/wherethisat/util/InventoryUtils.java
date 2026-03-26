@@ -1,8 +1,8 @@
 package com.buuz135.wherethisat.util;
 
+import com.hypixel.hytale.component.Holder;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.component.system.EntityEventSystem;
 import com.hypixel.hytale.math.vector.Vector3i;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
@@ -10,13 +10,12 @@ import com.hypixel.hytale.server.core.entity.InteractionManager;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.ecs.UseBlockEvent;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
+import com.hypixel.hytale.server.core.modules.block.components.ItemContainerBlock;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
-import com.hypixel.hytale.server.core.modules.interaction.BlockInteractionUtils;
 import com.hypixel.hytale.server.core.modules.interaction.InteractionSimulationHandler;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.meta.state.ItemContainerState;
+import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.*;
@@ -30,13 +29,15 @@ public class InventoryUtils {
         for (int x = -range; x <= range; x++) {
             for (int y = -range; y < range; y++) {
                 for (int z = -range; z <= range; z++) {
-                    var blocktype = world.getState((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z), true);
-                    if (blocktype instanceof ItemContainerState containerState) {
-                        var inventory = containerState.getItemContainer();
+                    var holder = world.getBlockComponentHolder((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z));
+                    if (holder == null) continue;
+                    var containerBlock = holder.getComponent(ItemContainerBlock.getComponentType());
+                    if (containerBlock != null) {
+                        var inventory = containerBlock.getItemContainer();
                         if (scannedContainers.stream().anyMatch(scannedInventory -> scannedInventory.container().equals(inventory))) continue;
                         if (!isBlockInteractable(ref, world, (int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z)))
                             continue;
-                        scannedContainers.add(new ScannedInventory(inventory, containerState));
+                        scannedContainers.add(new ScannedInventory(inventory, holder));
                         for (short i = 0; i < inventory.getCapacity(); i++) {
                             var stack = inventory.getItemStack(i);
                             if (stack != null && !stack.isEmpty()) {
@@ -74,7 +75,7 @@ public class InventoryUtils {
 
     public record InventoryScan(HashMap<String, Integer> items, List<ScannedInventory> scannedInventories) {}
 
-    public record ScannedInventory(ItemContainer container, ItemContainerState blockState) {}
+    public record ScannedInventory(ItemContainer container, Holder<ChunkStore> holder) {}
 
     public static boolean isBlockInteractable(Ref<EntityStore> ref, World world, int x, int y, int z){
         if (!ref.getStore().isInThread()) return false;
@@ -83,7 +84,7 @@ public class InventoryUtils {
         var player = ref.getStore().getComponent(ref, Player.getComponentType());
         var playerRef = ref.getStore().getComponent(ref, PlayerRef.getComponentType());
         var interactionManager = new InteractionManager(player, playerRef, new InteractionSimulationHandler());
-        var event = new UseBlockEvent.Pre(InteractionType.Use, InteractionContext.forProxyEntity(interactionManager, player, ref), new Vector3i(x, y, z), blockType);
+        var event = new UseBlockEvent.Pre(InteractionType.Use, InteractionContext.forProxyEntity(interactionManager, ref, ref, ref.getStore()), new Vector3i(x, y, z), blockType);
         ref.getStore().invoke(ref, event);
         return !event.isCancelled();
     }

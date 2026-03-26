@@ -28,8 +28,7 @@
     "ParticleColor": "#63412c",
     "TransitionToTag": "",
     "Interactions": {
-      "Use": "Buuz135_WhereThisAt_Open_Lectern",
-      "Primary": "Break_Container"
+      "Use": "Buuz135_WhereThisAt_Open_Lectern"
     },
     "VariantRotation": "NESW",
     "Support": {
