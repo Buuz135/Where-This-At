@@ -3,7 +3,6 @@ package com.buuz135.wherethisat.util;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.util.ChunkUtil;
-import com.hypixel.hytale.math.vector.Vector3i;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.InteractionManager;
@@ -16,6 +15,7 @@ import com.hypixel.hytale.server.core.modules.interaction.InteractionSimulationH
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import org.joml.Vector3i;
 
 import java.util.*;
 
@@ -28,9 +28,9 @@ public class InventoryUtils {
         for (int x = -range; x <= range; x++) {
             for (int y = -range; y < range; y++) {
                 for (int z = -range; z <= range; z++) {
-                    var worldChunk = world.getChunk(ChunkUtil.indexChunkFromBlock(position.getX() + x, position.getZ() + z));
+                    var worldChunk = world.getChunk(ChunkUtil.indexChunkFromBlock(position.x() + x, position.z() + z));
                     if (worldChunk == null) continue;
-                    var blockRef = worldChunk.getBlockComponentEntity((int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z));
+                    var blockRef = worldChunk.getBlockComponentEntity((int) (position.x() + x), (int) (position.y() + y), (int) (position.z() + z));
 
                     if (blockRef == null) continue;
 
@@ -38,7 +38,7 @@ public class InventoryUtils {
                     if (containerBlock != null) {
                         var inventory = containerBlock.getItemContainer();
                         if (scannedContainers.stream().anyMatch(scannedInventory -> scannedInventory.container().equals(inventory))) continue;
-                        if (!isBlockInteractable(ref, world, (int) (position.getX() + x), (int) (position.getY() + y), (int) (position.getZ() + z)))
+                        if (!isBlockInteractable(ref, world, (int) (position.x() + x), (int) (position.y() + y), (int) (position.z() + z)))
                             continue;
                         scannedContainers.add(new ScannedInventory(inventory, containerBlock));
                         for (short i = 0; i < inventory.getCapacity(); i++) {
@@ -84,9 +84,8 @@ public class InventoryUtils {
         if (!ref.getStore().isInThread()) return false;
         var blockType = world.getBlockType(x, y, z);
         if (blockType == null && blockType.getId().toLowerCase(Locale.ROOT).contains("trash")) return false;
-        var player = ref.getStore().getComponent(ref, Player.getComponentType());
         var playerRef = ref.getStore().getComponent(ref, PlayerRef.getComponentType());
-        var interactionManager = new InteractionManager(player, playerRef, new InteractionSimulationHandler());
+        var interactionManager = new InteractionManager(playerRef, new InteractionSimulationHandler());
         var event = new UseBlockEvent.Pre(InteractionType.Use, InteractionContext.forProxyEntity(interactionManager, ref, ref, ref.getStore()), new Vector3i(x, y, z), blockType);
         ref.getStore().invoke(ref, event);
         return !event.isCancelled();

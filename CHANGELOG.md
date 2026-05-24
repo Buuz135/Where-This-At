@@ -1,3 +1,7 @@
+# 1.0.11
+
+* Updated to version 0.5.0
+
 # 1.0.10
 
 * Fixed items not extracting properly

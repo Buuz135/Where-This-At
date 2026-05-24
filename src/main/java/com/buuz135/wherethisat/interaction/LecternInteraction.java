@@ -9,7 +9,6 @@ import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Holder;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.util.ChunkUtil;
-import com.hypixel.hytale.math.vector.Vector3i;
 import com.hypixel.hytale.protocol.InteractionState;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
@@ -29,6 +28,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 import org.checkerframework.checker.nullness.compatqual.NullableDecl;
+import org.joml.Vector3i;
 
 public class LecternInteraction extends SimpleBlockInteraction{
 
@@ -63,7 +63,6 @@ public class LecternInteraction extends SimpleBlockInteraction{
                 if (blockType != null) {
                     var blockRef = worldChunkComponent.getBlockComponentEntity(targetBlock.x, targetBlock.y, targetBlock.z);
                     player.getPageManager().openCustomPage(ref, store, new FindMeGui(playerRefComponent, CustomPageLifetime.CanDismiss, defaultSearch, scan.items(), scan.scannedInventories(), chunkStore, blockRef));
-
                 }
             }
         }
